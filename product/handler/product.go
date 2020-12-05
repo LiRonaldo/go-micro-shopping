@@ -2,47 +2,56 @@ package handler
 
 import (
 	"context"
-
-	"github.com/micro/go-micro/util/log"
-
+	"fmt"
+	"github.com/go-log/log"
+	_ "github.com/go-sql-driver/mysql"
+	"go-micro-shopping/product/model"
 	product "go-micro-shopping/product/proto/product"
+	"go-micro-shopping/product/repository"
 )
 
-type Product struct{}
+type Product struct {
+	Pro *repository.Product
+}
 
-// Call is a single request handler called via client.Call or the generated client code
-func (e *Product) Call(ctx context.Context, req *product.Request, rsp *product.Response) error {
-	log.Log("Received Product.Call request")
-	rsp.Msg = "Hello " + req.Name
+func (h *Product) SerchR(ctx context.Context, in *product.SerchRequest, out *product.SerchResponse) error {
+	var products []*product.Product
+	if err := h.Pro.Repo.Where("name like ?", "%"+in.Name+"%").Limit(10).Find(&products).Error; err != nil {
+		return err
+	}
+	out.Product = products
+	out.Code = "200"
+	out.Msg = fmt.Sprintf("总共%v条数据", len(products))
 	return nil
 }
 
-// Stream is a server side stream handler called via client.Stream or the generated client code
-func (e *Product) Stream(ctx context.Context, req *product.StreamingRequest, stream product.Product_StreamStream) error {
-	log.Logf("Received Product.Stream request with count: %d", req.Count)
-
-	for i := 0; i < int(req.Count); i++ {
-		log.Logf("Responding: %d", i)
-		if err := stream.Send(&product.StreamingResponse{
-			Count: int64(i),
-		}); err != nil {
-			return err
-		}
+func (h *Product) Detail(ctx context.Context, in *product.DetailRequest, out *product.DetailResponse) error {
+	product := &product.Product{}
+	if err := h.Pro.Repo.Where("id=?", in.Id).First(product).Error; err != nil {
+		return err
 	}
 
+	out.Code = "200"
+	out.Msg = "商品详细信息如下："
+	out.Product = product
 	return nil
 }
 
-// PingPong is a bidirectional stream handler called via client.Stream or the generated client code
-func (e *Product) PingPong(ctx context.Context, stream product.Product_PingPongStream) error {
-	for {
-		req, err := stream.Recv()
-		if err != nil {
-			return err
-		}
-		log.Logf("Got ping %v", req.Stroke)
-		if err := stream.Send(&product.Pong{Stroke: req.Stroke}); err != nil {
-			return err
-		}
+func (h *Product) ReduceNumber(ctx context.Context, in *product.ReduceNumberRequest, out *product.ReduceNumberResponse) error {
+	log.Log("Received Product.Detail request")
+
+	var product = &product.Product{}
+	if err := h.Pro.Repo.Where("id = ?", in.Id).First(product).Error; err != nil {
+		return err
 	}
+
+	product.Number -= 1
+	log.Log("库存数量为:", product.Number)
+	if err := h.Pro.Repo.Model(&model.Product{}).Where("id = ?", product.Id).Update("number", product.Number).Error; err != nil {
+		return err
+	}
+
+	out.Code = "200"
+	out.Msg = fmt.Sprintf("库存更新成功,更新后的数量为%v", product.Number)
+	return nil
 }
