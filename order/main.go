@@ -37,7 +37,9 @@ func main() {
 	创建product的客户端，利用service,service既可以是变成服务，又可以变成客户端
 	*/
 	productCli := product.NewProductService("go.micro.srv.product", service.Client())
-
+	/**
+	  传给order
+	*/
 	order.RegisterOrderServiceHandler(service.Server(), &handler.Order{&repository.Order{db}, productCli})
 	service.Init()
 	if err := service.Run(); err != nil {
