@@ -2,47 +2,64 @@ package handler
 
 import (
 	"context"
-
-	"github.com/micro/go-micro/util/log"
-
+	"github.com/bwmarrin/snowflake"
+	"github.com/micro/go-micro/errors"
+	product "go-mico-shopping/product/proto/product"
+	"go-micro-shopping/order/model"
 	order "go-micro-shopping/order/proto/order"
+	"go-micro-shopping/order/repository"
 )
 
-type Order struct{}
+/**
+在order中引入product的客户端
+*/
+type Order struct {
+	o          *repository.Order
+	ProductCli product.ProductService
+}
 
-// Call is a single request handler called via client.Call or the generated client code
-func (e *Order) Call(ctx context.Context, req *order.Request, rsp *order.Response) error {
-	log.Log("Received Order.Call request")
-	rsp.Msg = "Hello " + req.Name
+func (h *Order) Submit(ctx context.Context, in *order.SubmitRequest, out *order.Response) error {
+	productDetail, err := h.ProductCli.Detail(ctx, &product.DetailRequest{Id: in.ProductId})
+	if productDetail.Product.Number < 1 {
+		return errors.BadRequest("go.micro.srv.order", "库存不足")
+	}
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		return err
+	}
+
+	// Generate a snowflake ID.
+	orderId := node.Generate().String()
+	order := &model.Order{
+		Status:    1,
+		OrderId:   orderId,
+		ProductId: in.ProductId,
+		Uid:       in.Uid,
+	}
+	if err = h.o.Create(order); err != nil {
+		return err
+	}
+
+	//减库存
+	reduce, err := h.ProductCli.ReduceNumber(ctx, &product.ReduceNumberRequest{Id: in.ProductId})
+	if reduce == nil || reduce.Code != "200" {
+		return errors.BadRequest("go.micro.srv.order", err.Error())
+	}
+	out.Ode = "200"
+	out.Msg = "订单提交成功"
 	return nil
 }
 
-// Stream is a server side stream handler called via client.Stream or the generated client code
-func (e *Order) Stream(ctx context.Context, req *order.StreamingRequest, stream order.Order_StreamStream) error {
-	log.Logf("Received Order.Stream request with count: %d", req.Count)
+func (h *Order) OrderDetail(ctx context.Context, in *order.OrderDetailRequest, out *order.Response) error {
+	orderDetail, err := h.o.Find(in.OrdeId)
 
-	for i := 0; i < int(req.Count); i++ {
-		log.Logf("Responding: %d", i)
-		if err := stream.Send(&order.StreamingResponse{
-			Count: int64(i),
-		}); err != nil {
-			return err
-		}
+	if err != nil {
+		return err
 	}
 
+	productDetail, err := h.ProductCli.Detail(context.TODO(), &product.DetailRequest{Id: orderDetail.ProductId})
+
+	out.Ode = "200"
+	out.Msg = "订单详情如下：订单号为：" + orderDetail.OrderId + "。购买的产品名字为：" + productDetail.Product.Name
 	return nil
-}
-
-// PingPong is a bidirectional stream handler called via client.Stream or the generated client code
-func (e *Order) PingPong(ctx context.Context, stream order.Order_PingPongStream) error {
-	for {
-		req, err := stream.Recv()
-		if err != nil {
-			return err
-		}
-		log.Logf("Got ping %v", req.Stroke)
-		if err := stream.Send(&order.Pong{Stroke: req.Stroke}); err != nil {
-			return err
-		}
-	}
 }

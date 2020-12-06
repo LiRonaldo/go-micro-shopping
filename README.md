@@ -20,5 +20,8 @@ proto里的product 中多余的XX开头的字段不会显示到页面中，
 <h4>但是如果使用gorm框架的方法时使用model里的product当传入参数时要注意：因为model里的product引入了gorm.model，所以查询的时候会附加一个 DeletedAt is null 的条件，要注意。
 gorm 底层也是拼接的sql语句，之前写过一个类似的orm框架，走debug就会发现is null语句.
 gorm框架的方法find，creat update where 方法要根据文档要求传参数带不带&，不然会报错
+<h4>order服务
+<h5>在order服务想引用product中的东西。直接improt是不会生效的。将order mod文件加入 replace go-mico-shopping/product => ../product
+说白了就是将improt 导入的包替换成本地的
                                                                    
                                                                     
