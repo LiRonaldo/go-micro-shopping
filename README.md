@@ -23,5 +23,8 @@ gorm框架的方法find，creat update where 方法要根据文档要求传参�
 <h4>order服务
 <h5>在order服务想引用product中的东西。直接improt是不会生效的。将order mod文件加入 replace go-mico-shopping/product => ../product
 说白了就是将improt 导入的包替换成本地的
-                                                                   
+<h5>micor.newService 即可以通过方法RegisterXXXHandler 变成服务端.又可以NewXXXService变成客户端，并返回一个client ，通过client去调用方法。
+这里可以看出go-micro 的人性化。因为RegisterXXXHandler 变成服务端只返回一个error，因为服务端本身只等待客户端去调用，所以没有必要返回一个service，像客户端那样去service.方法去调用
+order服务使用了product服务中的方法. 因此，必须使用product服务的客户端去调用自身Product服务的方法,go-micro相比spring cloud的灵活之处是：
+在order服务中，micro.newService 的时候，可以通过product.newProductService（micro.newService。client）方法产生一个product的客户端，通过这个客户端去调用!                                                                 
                                                                     

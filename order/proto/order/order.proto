@@ -15,6 +15,6 @@ message OrderDetailRequest{
   string ordeId = 1;
 }
 service OrderService{
-  rpc Submit(SubmitRequest) returns (SubmitRequest){}
+  rpc Submit(SubmitRequest) returns (Response){}
   rpc OrderDetail(OrderDetailRequest) returns(Response){}
 }

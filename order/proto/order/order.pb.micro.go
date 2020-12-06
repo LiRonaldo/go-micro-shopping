@@ -34,7 +34,7 @@ var _ server.Option
 // Client API for OrderService service
 
 type OrderService interface {
-	Submit(ctx context.Context, in *SubmitRequest, opts ...client.CallOption) (*SubmitRequest, error)
+	Submit(ctx context.Context, in *SubmitRequest, opts ...client.CallOption) (*Response, error)
 	OrderDetail(ctx context.Context, in *OrderDetailRequest, opts ...client.CallOption) (*Response, error)
 }
 
@@ -56,9 +56,9 @@ func NewOrderService(name string, c client.Client) OrderService {
 	}
 }
 
-func (c *orderService) Submit(ctx context.Context, in *SubmitRequest, opts ...client.CallOption) (*SubmitRequest, error) {
+func (c *orderService) Submit(ctx context.Context, in *SubmitRequest, opts ...client.CallOption) (*Response, error) {
 	req := c.c.NewRequest(c.name, "OrderService.Submit", in)
-	out := new(SubmitRequest)
+	out := new(Response)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -79,13 +79,13 @@ func (c *orderService) OrderDetail(ctx context.Context, in *OrderDetailRequest, 
 // Server API for OrderService service
 
 type OrderServiceHandler interface {
-	Submit(context.Context, *SubmitRequest, *SubmitRequest) error
+	Submit(context.Context, *SubmitRequest, *Response) error
 	OrderDetail(context.Context, *OrderDetailRequest, *Response) error
 }
 
 func RegisterOrderServiceHandler(s server.Server, hdlr OrderServiceHandler, opts ...server.HandlerOption) error {
 	type orderService interface {
-		Submit(ctx context.Context, in *SubmitRequest, out *SubmitRequest) error
+		Submit(ctx context.Context, in *SubmitRequest, out *Response) error
 		OrderDetail(ctx context.Context, in *OrderDetailRequest, out *Response) error
 	}
 	type OrderService struct {
@@ -99,7 +99,7 @@ type orderServiceHandler struct {
 	OrderServiceHandler
 }
 
-func (h *orderServiceHandler) Submit(ctx context.Context, in *SubmitRequest, out *SubmitRequest) error {
+func (h *orderServiceHandler) Submit(ctx context.Context, in *SubmitRequest, out *Response) error {
 	return h.OrderServiceHandler.Submit(ctx, in, out)
 }
 

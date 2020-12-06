@@ -14,7 +14,7 @@ import (
 在order中引入product的客户端
 */
 type Order struct {
-	o          *repository.Order
+	O          *repository.Order
 	ProductCli product.ProductService
 }
 
@@ -36,7 +36,7 @@ func (h *Order) Submit(ctx context.Context, in *order.SubmitRequest, out *order.
 		ProductId: in.ProductId,
 		Uid:       in.Uid,
 	}
-	if err = h.o.Create(order); err != nil {
+	if err = h.O.Create(order); err != nil {
 		return err
 	}
 
@@ -51,7 +51,7 @@ func (h *Order) Submit(ctx context.Context, in *order.SubmitRequest, out *order.
 }
 
 func (h *Order) OrderDetail(ctx context.Context, in *order.OrderDetailRequest, out *order.Response) error {
-	orderDetail, err := h.o.Find(in.OrdeId)
+	orderDetail, err := h.O.Find(in.OrdeId)
 
 	if err != nil {
 		return err
