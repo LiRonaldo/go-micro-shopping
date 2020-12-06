@@ -1,35 +1,28 @@
 package main
 
 import (
-	"github.com/micro/go-micro/util/log"
 	"github.com/micro/go-micro"
-	"go-micro-shopping/notification/handler"
+	"github.com/micro/go-plugins/broker/mqtt"
+	_ "github.com/micro/go-plugins/broker/mqtt"
 	"go-micro-shopping/notification/subscriber"
-
-	notification "go-micro-shopping/notification/proto/notification"
+	"log"
 )
 
 func main() {
-	// New Service
+
+	mq := mqtt.NewBroker()
+	mq.Init()
+	mq.Connect()
 	service := micro.NewService(
 		micro.Name("go.micro.srv.notification"),
 		micro.Version("latest"),
+		micro.Broker(mq),
 	)
-
-	// Initialise service
 	service.Init()
+	micro.RegisterSubscriber("notification.submit", service.Server(), &subscriber.Notification{})
 
-	// Register Handler
-	notification.RegisterNotificationHandler(service.Server(), new(handler.Notification))
-
-	// Register Struct as Subscriber
-	micro.RegisterSubscriber("go.micro.srv.notification", service.Server(), new(subscriber.Notification))
-
-	// Register Function as Subscriber
-	micro.RegisterSubscriber("go.micro.srv.notification", service.Server(), subscriber.Handler)
-
-	// Run service
 	if err := service.Run(); err != nil {
 		log.Fatal(err)
 	}
+
 }

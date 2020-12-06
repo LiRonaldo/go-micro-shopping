@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/bwmarrin/snowflake"
+	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/errors"
 	product "go-mico-shopping/product/proto/product"
 	"go-micro-shopping/order/model"
@@ -16,6 +17,7 @@ import (
 type Order struct {
 	O          *repository.Order
 	ProductCli product.ProductService
+	Publisher  micro.Publisher
 }
 
 func (h *Order) Submit(ctx context.Context, in *order.SubmitRequest, out *order.Response) error {
@@ -44,6 +46,10 @@ func (h *Order) Submit(ctx context.Context, in *order.SubmitRequest, out *order.
 	reduce, err := h.ProductCli.ReduceNumber(ctx, &product.ReduceNumberRequest{Id: in.ProductId})
 	if reduce == nil || reduce.Code != "200" {
 		return errors.BadRequest("go.micro.srv.order", err.Error())
+	}
+	//异步发送通知给用户订单信息
+	if err := h.Publisher.Publish(ctx, in); err != nil {
+		return errors.BadRequest("notification", err.Error())
 	}
 	out.Ode = "200"
 	out.Msg = "订单提交成功"

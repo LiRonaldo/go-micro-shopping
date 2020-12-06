@@ -6,6 +6,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/config"
+	"github.com/micro/go-plugins/broker/mqtt"
+	_ "github.com/micro/go-plugins/broker/mqtt"
 	product "go-mico-shopping/product/proto/product"
 	"go-micro-shopping/order/handler"
 	"go-micro-shopping/order/model"
@@ -29,18 +31,25 @@ func main() {
 	db.AutoMigrate(&model.Order{})
 	defer db.Close()
 	// New Service
+	mq := mqtt.NewBroker()
+
 	service := micro.NewService(
 		micro.Name("go.micro.srv.order"),
 		micro.Version("latest"),
+		micro.Broker(mq),
 	)
 	/**
 	创建product的客户端，利用service,service既可以是变成服务，又可以变成客户端
 	*/
 	productCli := product.NewProductService("go.micro.srv.product", service.Client())
 	/**
+	消息发布者
+	*/
+	publisher := micro.NewPublisher("notification.submit", service.Client())
+	/**
 	  传给order
 	*/
-	order.RegisterOrderServiceHandler(service.Server(), &handler.Order{&repository.Order{db}, productCli})
+	order.RegisterOrderServiceHandler(service.Server(), &handler.Order{&repository.Order{db}, productCli, publisher})
 	service.Init()
 	if err := service.Run(); err != nil {
 		log.Fatal(err.Error())

@@ -8,6 +8,7 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/jinzhu/gorm v1.9.16
 	github.com/micro/go-micro v1.18.0
+	github.com/micro/go-plugins v1.5.1
 	go-mico-shopping/product v0.0.0-00010101000000-000000000000
 )
 
