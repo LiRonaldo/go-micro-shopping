@@ -1,37 +1,23 @@
 syntax = "proto3";
 
 package go.micro.srv.notification;
+import "user/proto/user/user.proto";
+import "product/proto/product/product.proto";
 
-service Notification {
-	rpc Call(Request) returns (Response) {}
-	rpc Stream(StreamingRequest) returns (stream StreamingResponse) {}
-	rpc PingPong(stream Ping) returns (stream Pong) {}
+
+message NotifyOrderRequest{
+  go.micro.srv.user.User user = 1;
+  go.micro.srv.product.Product  product = 2;
 }
-
-message Message {
-	string say = 1;
+message  SubmitRequest {
+  uint32 productId = 1;
+  uint32 count = 2;
+  uint32 uid = 3;
 }
-
-message Request {
-	string name = 1;
+message Response{
+  string code = 1;
+  string msg = 2;
 }
-
-message Response {
-	string msg = 1;
-}
-
-message StreamingRequest {
-	int64 count = 1;
-}
-
-message StreamingResponse {
-	int64 count = 1;
-}
-
-message Ping {
-	int64 stroke = 1;
-}
-
-message Pong {
-	int64 stroke = 1;
+service ProductService {
+  rpc NotifyOrder (NotifyOrderRequest) returns (Response){}
 }
