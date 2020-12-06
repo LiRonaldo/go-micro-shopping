@@ -57,7 +57,7 @@ func (h *Order) OrderDetail(ctx context.Context, in *order.OrderDetailRequest, o
 		return err
 	}
 
-	productDetail, err := h.ProductCli.Detail(context.TODO(), &product.DetailRequest{Id: orderDetail.ProductId})
+	productDetail, err := h.ProductCli.Detail(ctx, &product.DetailRequest{Id: orderDetail.ProductId})
 
 	out.Ode = "200"
 	out.Msg = "订单详情如下：订单号为：" + orderDetail.OrderId + "。购买的产品名字为：" + productDetail.Product.Name

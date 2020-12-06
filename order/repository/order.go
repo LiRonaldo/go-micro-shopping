@@ -23,7 +23,7 @@ func (repo *Order) Create(order *model.Order) error {
 }
 func (repo *Order) Find(orderId string) (*model.Order, error) {
 	order := &model.Order{}
-	if err := repo.Repo.Where("orderId =?", orderId).Find(order).Error; err != nil {
+	if err := repo.Repo.Where("order_id=?", orderId).Find(order).Error; err != nil {
 		return nil, err
 	}
 	return order, nil

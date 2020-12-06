@@ -8,6 +8,7 @@ import (
 	"github.com/micro/go-micro/config"
 	product "go-mico-shopping/product/proto/product"
 	"go-micro-shopping/order/handler"
+	"go-micro-shopping/order/model"
 	order "go-micro-shopping/order/proto/order"
 	"go-micro-shopping/order/repository"
 	"log"
@@ -25,6 +26,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("can not find mysql: %s", err.Error())
 	}
+	db.AutoMigrate(&model.Order{})
+	defer db.Close()
 	// New Service
 	service := micro.NewService(
 		micro.Name("go.micro.srv.order"),
