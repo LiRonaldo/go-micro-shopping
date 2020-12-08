@@ -3,7 +3,8 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/go-log/log"
+	_ "github.com/LiRonaldo/l-log"
+	log "github.com/LiRonaldo/l-log"
 	_ "github.com/go-sql-driver/mysql"
 	"go-micro-shopping/product/model"
 	product "go-micro-shopping/product/proto/product"
@@ -38,7 +39,7 @@ func (h *Product) Detail(ctx context.Context, in *product.DetailRequest, out *pr
 }
 
 func (h *Product) ReduceNumber(ctx context.Context, in *product.ReduceNumberRequest, out *product.ReduceNumberResponse) error {
-	log.Log("Received Product.Detail request")
+	log.Info("Received Product.Detail request")
 
 	var product = &product.Product{}
 	if err := h.Pro.Repo.Where("id = ?", in.Id).First(product).Error; err != nil {
@@ -46,7 +47,7 @@ func (h *Product) ReduceNumber(ctx context.Context, in *product.ReduceNumberRequ
 	}
 
 	product.Number -= 1
-	log.Log("库存数量为:", product.Number)
+	log.Info("库存数量为:", product.Number)
 	if err := h.Pro.Repo.Model(&model.Product{}).Where("id = ?", product.Id).Update("number", product.Number).Error; err != nil {
 		return err
 	}

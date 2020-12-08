@@ -1,11 +1,12 @@
 package main
 
 import (
+	_ "github.com/LiRonaldo/l-log"
+	log "github.com/LiRonaldo/l-log"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-plugins/broker/mqtt"
 	_ "github.com/micro/go-plugins/broker/mqtt"
 	"go-micro-shopping/notification/subscriber"
-	"log"
 )
 
 func main() {

@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	_ "github.com/LiRonaldo/l-log"
+	log "github.com/LiRonaldo/l-log"
 	"github.com/jinzhu/gorm"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/config"
-	"github.com/micro/go-micro/util/log"
 	"go-micro-shopping/product/handler"
 	"go-micro-shopping/product/model"
 	proto "go-micro-shopping/product/proto/product"

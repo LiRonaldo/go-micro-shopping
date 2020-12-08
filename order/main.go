@@ -1,7 +1,10 @@
 package main
 
 import (
+	"contrib.go.opencensus.io/exporter/zipkin"
 	"fmt"
+	_ "github.com/LiRonaldo/l-log"
+	log "github.com/LiRonaldo/l-log"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/micro/go-micro"
@@ -13,7 +16,11 @@ import (
 	"go-micro-shopping/order/model"
 	order "go-micro-shopping/order/proto/order"
 	"go-micro-shopping/order/repository"
-	"log"
+	"go.opencensus.io/trace"
+	//wrapperTrace "github.com/micro/go-plugins/wrapper/trace/opencensus"
+	openzipkin "github.com/openzipkin/zipkin-go"
+	zipkinHTTP "github.com/openzipkin/zipkin-go/reporter/http"
+	"os"
 )
 
 func main() {
@@ -66,4 +73,20 @@ func createdatabase(conf map[string]interface{}) (*gorm.DB, error) {
 		user, password, host, port, dbName,
 	),
 	)
+}
+
+func TraceBoot() {
+	apiURL := "http://192.168.0.111:9411/api/v2/spans"
+	hostPort, _ := os.Hostname()
+	serviceName := "go.micro.srv.order"
+
+	localEndpoint, err := openzipkin.NewEndpoint(serviceName, hostPort)
+	if err != nil {
+		log.Fatalf("Failed to create the local zipkinEndpoint: %v", err)
+	}
+	reporter := zipkinHTTP.NewReporter(apiURL)
+	ze := zipkin.NewExporter(reporter, localEndpoint)
+	trace.RegisterExporter(ze)
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	return
 }
